@@ -1,7 +1,8 @@
 """Список ссылок на фиды."""
 FEEDS = [
     'https://www.eapteka.ru/upload/feed/yandex_market/tyumenskaya-oblast.xml',
-    'https://www.eapteka.ru/upload/feed/yandex_market/chelyabinskaya-oblast.xml',
+    'https://www.eapteka.ru/upload/feed/'
+    'yandex_market/chelyabinskaya-oblast.xml',
     'https://www.eapteka.ru/upload/feed/yandex_market/abakan.xml',
     'https://www.eapteka.ru/upload/feed/yandex_market/astrakhan.xml',
     'https://www.eapteka.ru/upload/feed/yandex_market/barnaul.xml',
@@ -72,26 +73,36 @@ FEEDS = [
     'https://www.eapteka.ru/upload/feed/yandex_market/yaroslavl.xml',
     'https://www.eapteka.ru/upload/feed/yandex_market/yoshkar-ola.xml',
     'https://www.eapteka.ru/upload/feed/yandex_market/syktyvkar.xml',
-    'https://www.eapteka.ru/upload/feed/yandex_market/arkhangelskaya-oblast.xml',
+    'https://www.eapteka.ru/upload/feed/'
+    'yandex_market/arkhangelskaya-oblast.xml',
     'https://www.eapteka.ru/upload/feed/yandex_market/permskij-kraj.xml',
     'https://www.eapteka.ru/upload/feed/yandex_market/respublika-komi.xml',
     'https://www.eapteka.ru/upload/feed/yandex_market/krasnodarskij-kraj.xml',
     'https://www.eapteka.ru/upload/feed/yandex_market/respublika-komi.xml',
     'https://www.eapteka.ru/upload/feed/yandex_market/amurskaya-oblast.xml',
-    'https://www.eapteka.ru/upload/feed/yandex_market/yevreyskaya-avtonomnaya-oblast.xml',
+    'https://www.eapteka.ru/upload/feed/'
+    'yandex_market/yevreyskaya-avtonomnaya-oblast.xml',
     'https://www.eapteka.ru/upload/feed/yandex_market/kamchatskiy-kray.xml',
-    'https://www.eapteka.ru/upload/feed/yandex_market/novgorodskaya-oblast.xml',
-    'https://www.eapteka.ru/upload/feed/yandex_market/yamalo-nenetskiy-avtonomniy-okrug.xml',
+    'https://www.eapteka.ru/upload/feed/'
+    'yandex_market/novgorodskaya-oblast.xml',
+    'https://www.eapteka.ru/upload/feed/'
+    'yandex_market/yamalo-nenetskiy-avtonomniy-okrug.xml',
     'https://www.eapteka.ru/upload/feed/yandex_market/altajskij-kraj.xml',
-    'https://www.eapteka.ru/upload/feed/yandex_market/respublika-severnaya-osetiya-alaniya.xml',
-    'https://www.eapteka.ru/upload/feed/yandex_market/respublika-buryatiya.xml',
+    'https://www.eapteka.ru/upload/feed/'
+    'yandex_market/respublika-severnaya-osetiya-alaniya.xml',
+    'https://www.eapteka.ru/upload/feed/'
+    'yandex_market/respublika-buryatiya.xml',
     'https://www.eapteka.ru/upload/feed/yandex_market/respublika-dagestan.xml',
-    'https://www.eapteka.ru/upload/feed/yandex_market/khanty-mansiyskiy-avtonomniy-okrug-yugra.xml',
-    'https://www.eapteka.ru/upload/feed/yandex_market/chechenskaya-respublika.xml',
+    'https://www.eapteka.ru/upload/feed/'
+    'yandex_market/khanty-mansiyskiy-avtonomniy-okrug-yugra.xml',
+    'https://www.eapteka.ru/upload/feed/'
+    'yandex_market/chechenskaya-respublika.xml',
     'https://www.eapteka.ru/upload/feed/yandex_market/irkutskaya-oblast.xml',
     'https://www.eapteka.ru/upload/feed/yandex_market/respublika-marij-el.xml',
-    'https://www.eapteka.ru/upload/feed/yandex_market/sverdlovskaya-oblast.xml',
-    'https://www.eapteka.ru/upload/feed/yandex_market/orenburgskaya-oblast.xml',
+    'https://www.eapteka.ru/upload/feed/'
+    'yandex_market/sverdlovskaya-oblast.xml',
+    'https://www.eapteka.ru/upload/feed/'
+    'yandex_market/orenburgskaya-oblast.xml',
     'https://www.eapteka.ru/upload/feed/yandex_market/respublika-dagestan.xml',
     'https://www.eapteka.ru/upload/feed/yandex_market/primorskiy-kray.xml'
 ]
