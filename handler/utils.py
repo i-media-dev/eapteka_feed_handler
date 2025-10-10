@@ -1,7 +1,7 @@
-from handler.eapteka_db import XMLDataBase
-from handler.eapteka_handler import XMLHandler
-from handler.eapteka_image import XMLImage
-from handler.eapteka_save import XMLSaver
+from handler.feeds_handler import XMLHandler
+from handler.feeds_save import XMLSaver
+from handler.image_handler import XMLImage
+from handler.reports_db import XMLDataBase
 
 
 def initialize_components() -> tuple:
