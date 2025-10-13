@@ -26,7 +26,7 @@ class XMLSaver(FileMixin):
 
     def __init__(
         self,
-        feeds_list: list[str] = FEEDS,
+        feeds_list: tuple[str, ...] = FEEDS,
         feeds_folder: str = FEEDS_FOLDER
     ) -> None:
         if not feeds_list:

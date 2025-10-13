@@ -1,5 +1,5 @@
 """Список ссылок на фиды."""
-FEEDS = [
+FEEDS = (
     'https://www.eapteka.ru/upload/feed/yandex_market/tyumenskaya-oblast.xml',
     'https://www.eapteka.ru/upload/feed/'
     'yandex_market/chelyabinskaya-oblast.xml',
@@ -105,5 +105,5 @@ FEEDS = [
     'yandex_market/orenburgskaya-oblast.xml',
     'https://www.eapteka.ru/upload/feed/yandex_market/respublika-dagestan.xml',
     'https://www.eapteka.ru/upload/feed/yandex_market/primorskiy-kray.xml'
-]
+)
 """Список ссылок на фиды для скачивания."""

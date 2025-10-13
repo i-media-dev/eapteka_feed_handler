@@ -4,6 +4,41 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+PROTOCOL = 'https'
+"""Протокол запроса."""
+
+ADDRESS = 'projects/eapteka/new_images'
+"""Путь к файлу."""
+
+DOMEN_FTP = 'feeds.i-media.ru'
+"""Домен FTP-сервера."""
+
+DEFAULT_IMAGE_SIZE = (1000, 1000)
+"""
+Оптимальный размер рамки и финального
+изображения по умолчанию.
+"""
+
+VERTICAL_OFFSET = 50
+"""
+Сдвиг вниз по вертикали (опциональный параметр).
+Если указать 0, изображение будет ровно по центру.
+"""
+
+RGB_COLOR_SETTINGS = (255, 255, 255)
+"""Цвет RGB холста."""
+
+RGBA_COLOR_SETTINGS = (0, 0, 0, 0)
+"""Цвет RGBA холста."""
+
+NUMBER_PIXELS_IMAGE = 110
+"""
+Количество пикселей для подгонки изображения.
+Чем меньше число, тем больше размер картинки.
+"""
+
+NAME_OF_FRAME = 'ea_3.png'
+
 DATE_FORMAT = '%Y-%m-%d'
 """Формат даты по умолчанию."""
 
@@ -19,13 +54,18 @@ MAX_RETRIES = 5
 NAME_OF_SHOP = 'eapteka'
 """Константа названия магазина."""
 
+FRAME_FOLDER = os.getenv('FRAME_FOLDER', 'frame')
+"""Константа стокового названия директории c рамкой"""
+
 FEEDS_FOLDER = os.getenv('FEEDS_FOLDER', 'temp_feeds')
 """Константа стокового названия директорий."""
-PARSE_FEEDS_FOLDER = os.getenv('PARSE_FEEDS_FOLDER', 'new_feeds')
+
+NEW_FEEDS_FOLDER = os.getenv('NEW_FEEDS_FOLDER', 'new_feeds')
 """Константа стокового названия директорий."""
 
 IMAGE_FOLDER = os.getenv('IMAGE_FOLDER', 'old_images')
 """Константа стокового названия директорий."""
+
 NEW_IMAGE_FOLDER = os.getenv('NEW_IMAGE_FOLDER', 'new_images')
 """Константа стокового названия директорий."""
 
