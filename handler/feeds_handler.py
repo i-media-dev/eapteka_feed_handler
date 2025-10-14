@@ -276,10 +276,7 @@ class XMLHandler(FileMixin):
     def _delete_picture(self):
         try:
             image_dict = {}
-            for img_file in self._get_filenames_list(
-                self.new_image_folder,
-                'png'
-            ):
+            for img_file in self._get_filenames_list(self.new_image_folder):
                 try:
                     offer_id = img_file.split('_')[0]
                     if offer_id not in image_dict:
@@ -310,10 +307,7 @@ class XMLHandler(FileMixin):
 
     def _get_image_dict(self):
         image_dict = {}
-        for img_file in self._get_filenames_list(
-            self.new_image_folder,
-            'png'
-        ):
+        for img_file in self._get_filenames_list(self.new_image_folder):
             try:
                 offer_id = img_file.split('.')[0]
                 if offer_id not in image_dict:

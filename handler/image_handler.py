@@ -68,10 +68,10 @@ class XMLImage(FileMixin):
             return ''
         return f'{offer_id}.{image_format}'
 
-    def _build_offers_set(self, folder: str, format_str: str, target_set: set):
+    def _build_offers_set(self, folder: str, target_set: set):
         """Защищенный метод, строит множество всех существующих офферов."""
         try:
-            for file_name in self._get_filenames_list(folder, format_str):
+            for file_name in self._get_filenames_list(folder):
                 offer_image = file_name.split('.')[0]
                 if offer_image:
                     target_set.add(offer_image)
@@ -182,7 +182,7 @@ class XMLImage(FileMixin):
     @time_of_function
     def add_frame(self):
         """Метод форматирует изображения и добавляет рамку."""
-        images_names_list = self._get_filenames_list(self.image_folder, 'jpeg')
+        images_names_list = self._get_filenames_list(self.image_folder)
         file_path = self._make_dir(self.image_folder)
         frame_path = self._make_dir(self.frame_folder)
         new_file_path = self._make_dir(self.new_image_folder)
