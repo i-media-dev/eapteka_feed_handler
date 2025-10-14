@@ -273,38 +273,6 @@ class XMLHandler(FileMixin):
         logging.info(f'✅ Данные сохранены в {filename}')
         logging.debug('Файл сохранен.')
 
-    def _delete_picture(self):
-        try:
-            image_dict = {}
-            for img_file in self._get_filenames_list(self.new_image_folder):
-                try:
-                    offer_id = img_file.split('_')[0]
-                    if offer_id not in image_dict:
-                        image_dict[offer_id] = []
-                    image_dict[offer_id].append(img_file)
-                except (ValueError, IndexError):
-                    continue
-
-            for file_name in self._get_filenames_list(self.feeds_folder):
-                tree = self._get_tree(file_name, self.feeds_folder)
-                root = tree.getroot()
-
-                for offer in list(root.findall('.//offer')):
-                    offer_id = offer.get('id')
-                    if not offer_id:
-                        continue
-
-                    images = list(offer.findall('picture'))
-                    for image in images:
-                        offer.remove(image)
-                    logging.info(
-                        f'В оффере с id {offer_id} '
-                        f'удалено {len(images)} изображений'
-                    )
-        except Exception as e:
-            logging.error(f'Ошибка в _delete_picture: {e}')
-            raise
-
     def _get_image_dict(self):
         image_dict = {}
         for img_file in self._get_filenames_list(self.new_image_folder):
