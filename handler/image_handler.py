@@ -117,7 +117,6 @@ class XMLImage(FileMixin):
         try:
             self._build_offers_set(
                 self.image_folder,
-                'jpeg',
                 self._existing_image_offers
             )
         except (DirectoryCreationError, EmptyFeedsListError):
@@ -193,7 +192,6 @@ class XMLImage(FileMixin):
         try:
             self._build_offers_set(
                 self.new_image_folder,
-                'png',
                 self._existing_framed_offers
             )
         except (DirectoryCreationError, EmptyFeedsListError):
