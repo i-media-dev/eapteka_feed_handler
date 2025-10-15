@@ -26,10 +26,10 @@ VERTICAL_OFFSET = 50
 """
 
 RGB_COLOR_SETTINGS = (255, 255, 255)
-"""Цвет RGB холста."""
+"""Цвет RGB холста (белый)."""
 
-RGBA_COLOR_SETTINGS = (0, 0, 0, 0)
-"""Цвет RGBA холста."""
+RGBA_COLOR_SETTINGS = (255, 255, 255, 255)
+"""Цвет RGBA холста (белый)."""
 
 NUMBER_PIXELS_IMAGE = 110
 """

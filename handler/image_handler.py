@@ -7,7 +7,7 @@ from PIL import Image
 
 from handler.constants import (DEFAULT_IMAGE_SIZE, FEEDS_FOLDER, FRAME_FOLDER,
                                IMAGE_FOLDER, NAME_OF_FRAME, NEW_IMAGE_FOLDER,
-                               NUMBER_PIXELS_IMAGE, RGB_COLOR_SETTINGS,
+                               NUMBER_PIXELS_IMAGE, RGBA_COLOR_SETTINGS,
                                VERTICAL_OFFSET)
 from handler.decorators import time_of_function
 from handler.exceptions import DirectoryCreationError, EmptyFeedsListError
@@ -71,7 +71,8 @@ class XMLImage(FileMixin):
     def _build_offers_set(self, folder: str, target_set: set):
         """Защищенный метод, строит множество всех существующих офферов."""
         try:
-            for file_name in self._get_filenames_list(folder):
+            filenames_list = self._get_filenames_list(folder)
+            for file_name in filenames_list:
                 offer_image = file_name.split('.')[0]
                 if offer_image:
                     target_set.add(offer_image)
@@ -128,7 +129,13 @@ class XMLImage(FileMixin):
             for file_name in file_name_list:
                 tree = self._get_tree(file_name, self.feeds_folder)
                 root = tree.getroot()
-                for offer in root.findall('.//offer'):
+                offers = root.findall('.//offer')
+
+                if not offers:
+                    logging.debug(f'В файле {file_name} не найдено offers')
+                    continue
+
+                for offer in offers:
                     offer_id = offer.get('id')
                     total_offers_processed += 1
 
@@ -206,6 +213,7 @@ class XMLImage(FileMixin):
                     continue
                 try:
                     with Image.open(file_path / image_name) as image:
+                        image = image.convert('RGBA')
                         image.load()
                 except Exception as e:
                     total_failed_images += 1
@@ -226,17 +234,22 @@ class XMLImage(FileMixin):
                 )
 
                 final_image = Image.new(
-                    'RGB',
+                    'RGBA',
                     DEFAULT_IMAGE_SIZE,
-                    RGB_COLOR_SETTINGS
+                    RGBA_COLOR_SETTINGS
                 )
 
                 x_position = (image_width - new_image_width) // 2
                 y_position = (
                     image_height - new_image_height
                 ) // 2 + VERTICAL_OFFSET
-                final_image.paste(resized_image, (x_position, y_position))
+                final_image.paste(
+                    resized_image,
+                    (x_position, y_position),
+                    resized_image
+                )
                 final_image.paste(frame_resized, (0, 0), frame_resized)
+                final_image = final_image.convert('RGB')
                 final_image.save(
                     new_file_path / f'{image_name.split('.')[0]}.png',
                     'PNG'

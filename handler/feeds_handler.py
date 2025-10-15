@@ -42,12 +42,11 @@ class XMLHandler(FileMixin):
         """Защищенный метод, сохраняет отформатированные файлы."""
         root = elem
         self._indent(root)
-        formatted_xml = ET.tostring(root, encoding='unicode')
+        formatted_xml = ET.tostring(root, encoding='windows-1251')
         file_path = self._make_dir(file_folder)
         with open(
             file_path / filename,
-            'w',
-            encoding='windows-1251'
+            'wb'
         ) as f:
             f.write(formatted_xml)
 
@@ -74,7 +73,13 @@ class XMLHandler(FileMixin):
         for file_name in file_names:
             tree = self._get_tree(file_name, self.feeds_folder)
             root = tree.getroot()
-            for offer in root.findall('.//offer'):
+            offers = root.findall('.//offer')
+
+            if not offers:
+                logging.debug(f'В файле {file_name} не найдено offers')
+                continue
+
+            for offer in offers:
                 offer_id = offer.get('id')
                 if offer_id:
                     offer_counts[offer_id] += 1
@@ -129,7 +134,13 @@ class XMLHandler(FileMixin):
         for file_name in self._get_filenames_list(self.feeds_folder):
             tree = self._get_tree(file_name, self.feeds_folder)
             root = tree.getroot()
-            for offer in root.findall('.//offer'):
+            offers = root.findall('.//offer')
+
+            if not offers:
+                logging.debug(f'В файле {file_name} не найдено offers')
+                continue
+
+            for offer in offers:
                 offer_name_text = offer.findtext('name')
                 offer_url_text = offer.findtext('url')
                 offer_id = offer.get('id')
@@ -179,10 +190,21 @@ class XMLHandler(FileMixin):
         for file_name in self._get_filenames_list(self.feeds_folder):
             tree = self._get_tree(file_name, self.feeds_folder)
             root = tree.getroot()
+            categories = root.findall('.//category')
+            offers = root.findall('.//offer')
+
+            if not categories:
+                logging.debug(f'В файле {file_name} не найдено category')
+                continue
+
+            if not offers:
+                logging.debug(f'В файле {file_name} не найдено offers')
+                continue
+
             category_data = {}
             all_categories = {}
 
-            for category in root.findall('.//category'):
+            for category in categories:
                 category_name = category.text
                 category_id = category.get('id')
                 parent_id = category.get('parentId')
@@ -193,7 +215,7 @@ class XMLHandler(FileMixin):
                     'offers_count': 0
                 }
 
-            for offer in root.findall('.//offer'):
+            for offer in offers:
                 category_id = offer.findtext('categoryId')
                 price = offer.findtext('price')
                 if category_id and price:
@@ -275,7 +297,8 @@ class XMLHandler(FileMixin):
 
     def _get_image_dict(self):
         image_dict = {}
-        for img_file in self._get_filenames_list(self.new_image_folder):
+        filenames_list = self._get_filenames_list(self.new_image_folder)
+        for img_file in filenames_list:
             try:
                 offer_id = img_file.split('.')[0]
                 if offer_id not in image_dict:
@@ -302,8 +325,9 @@ class XMLHandler(FileMixin):
         input_images = 0
         try:
             image_dict = self._get_image_dict()
+            filenames_list = self._get_filenames_list(self.feeds_folder)
 
-            for file_name in self._get_filenames_list(self.feeds_folder):
+            for file_name in filenames_list:
                 tree = self._get_tree(file_name, self.feeds_folder)
                 root = tree.getroot()
 
