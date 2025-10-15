@@ -204,9 +204,15 @@ class XMLImage(FileMixin):
                 if image_name.split('.')[0] in self._existing_framed_offers:
                     skipped_images += 1
                     continue
-
-                with Image.open(file_path / image_name) as image:
-                    image.load()
+                try:
+                    with Image.open(file_path / image_name) as image:
+                        image.load()
+                except Exception as e:
+                    total_failed_images += 1
+                    logging.error(
+                        f'Ошибка загрузки изображения {image_name}: {e}'
+                    )
+                    continue
 
                 with Image.open(frame_path / NAME_OF_FRAME) as frame:
                     frame_resized = frame.resize(DEFAULT_IMAGE_SIZE)
@@ -245,5 +251,5 @@ class XMLImage(FileMixin):
 
             )
         except Exception as e:
-            total_failed_images += 1
-            logging.error(f'Неожиданная ошибка наложения рамки: {e}')
+            logging.error(f'Критическая ошибка в процессе обрамления: {e}')
+            raise
