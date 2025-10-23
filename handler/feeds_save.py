@@ -40,6 +40,8 @@ class XMLSaver(FileMixin):
     def _get_file(self, feed: str):
         """Защищенный метод, получает фид по ссылке."""
         try:
+            username = os.getenv('XML_FEED_USERNAME')
+            password = os.getenv('XML_FEED_PASSWORD')
             response = requests.get(
                 feed,
                 auth=(username, password),
