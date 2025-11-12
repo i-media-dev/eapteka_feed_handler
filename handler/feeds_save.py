@@ -2,11 +2,13 @@ import logging
 import os
 import re
 import xml.etree.ElementTree as ET
+from concurrent.futures import ThreadPoolExecutor, as_completed
+from pathlib import Path
 
 import requests
 from dotenv import load_dotenv
 
-from handler.constants import FEEDS_FOLDER
+from handler.constants import ATTEMPTION_LOAD_FEED, FEEDS_FOLDER, MAX_WORKERS
 from handler.decorators import retry_on_network_error, time_of_function
 from handler.exceptions import (EmptyFeedsListError, EmptyXMLError,
                                 InvalidXMLError)
@@ -27,7 +29,9 @@ class XMLSaver(FileMixin):
     def __init__(
         self,
         feeds_list: tuple[str, ...] = FEEDS,
-        feeds_folder: str = FEEDS_FOLDER
+        feeds_folder: str = FEEDS_FOLDER,
+        max_workers: int = MAX_WORKERS,
+        max_load_attempt: int = ATTEMPTION_LOAD_FEED
     ) -> None:
         if not feeds_list:
             logging.error('Не передан список фидов.')
@@ -35,6 +39,8 @@ class XMLSaver(FileMixin):
 
         self.feeds_list = feeds_list
         self.feeds_folder = feeds_folder
+        self.max_workers = max_workers
+        self.max_load_attempt = max_load_attempt
 
     @retry_on_network_error(max_attempts=3, delays=(2, 5, 10))
     def _get_file(self, feed: str):
@@ -117,39 +123,60 @@ class XMLSaver(FileMixin):
             raise InvalidXMLError(f'XML содержит синтаксические ошибки: {e}')
         return decoded_content, encoding
 
+    def _process_single_feed(self, feed: str, folder_path: Path):
+        """Обрабатывает один фид: скачивает, валидирует и сохраняет."""
+        file_name = self._get_filename(feed)
+        file_path = folder_path / file_name
+        response = self._get_file(feed)
+
+        if response is None:
+            logging.warning('Фид %s не получен.', file_name)
+            return False
+        try:
+            xml_content = response.content
+            decoded_content, encoding = self._validate_xml(xml_content)
+            xml_tree = ET.fromstring(decoded_content)
+            self._indent(xml_tree)
+            tree = ET.ElementTree(xml_tree)
+            with open(file_path, 'wb') as file:
+                tree.write(file, encoding=encoding, xml_declaration=True)
+            logging.info(f'Файл {file_name} успешно сохранен')
+            return True
+
+        except (EmptyXMLError, InvalidXMLError) as error:
+            logging.error('Ошибка валидации XML %s: %s', file_name, error)
+            return False
+        except Exception as error:
+            logging.error(
+                'Ошибка обработки файла %s: %s',
+                file_name,
+                error
+            )
+            raise
+
     @time_of_function
     def save_xml(self) -> None:
-        """Метод, сохраняющий фиды в xml-файлы"""
+        """Метод, сохраняющий фиды в xml-файлы."""
         total_files: int = len(self.feeds_list)
         saved_files = 0
         folder_path = self._make_dir(self.feeds_folder)
-        for feed in self.feeds_list:
-            file_name = self._get_filename(feed)
-            file_path = folder_path / file_name
-            response = self._get_file(feed)
-            if response is None:
-                logging.warning('XML-файл %s не получен.', file_name)
-                continue
-            try:
-                xml_content = response.content
-                decoded_content, encoding = self._validate_xml(xml_content)
-                xml_tree = ET.fromstring(decoded_content)
-                self._indent(xml_tree)
-                tree = ET.ElementTree(xml_tree)
-                with open(file_path, 'wb') as file:
-                    tree.write(file, encoding=encoding, xml_declaration=True)
-                saved_files += 1
-                logging.info('Файл %s успешно сохранен', file_name)
-            except (EmptyXMLError, InvalidXMLError) as error:
-                logging.error('Ошибка валидации XML %s: %s', file_name, error)
-                continue
-            except Exception as error:
-                logging.error(
-                    'Ошибка обработки файла %s: %s',
-                    file_name,
-                    error
-                )
-                raise
+        with ThreadPoolExecutor(max_workers=self.max_workers) as executor:
+            future_to_feed = {
+                executor.submit(
+                    self._process_single_feed,
+                    feed,
+                    folder_path
+                ): feed
+                for feed in self.feeds_list
+            }
+            for future in as_completed(future_to_feed):
+                feed = future_to_feed[future]
+                try:
+                    if future.result():
+                        saved_files += 1
+                except Exception as exc:
+                    logging.error(
+                        'Фид %s сгенерировал исключение: %s', feed, exc)
         logging.info(
             'Успешно записано %s файлов из %s.',
             saved_files,
