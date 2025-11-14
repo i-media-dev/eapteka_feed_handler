@@ -4,6 +4,21 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+
+PROBLEM_IMAGES = (
+    'https://www.eapteka.ru/upload/offer_photo/'
+    '281/029/1_7b5678e78dc127620e62fdfcb87f7cb9.png?t=16333',
+    'https://www.eapteka.ru/upload/offer_photo/'
+    '265/550/1_1709dd2af6fc214012d9f63b6153d9e5.png?t=16333',
+    'https://www.eapteka.ru/upload/offer_photo/'
+    '261/465/1_c7d0e00516e2572b159495c73264ac75.png?t=16333',
+    'https://www.eapteka.ru/upload/offer_photo/'
+    '241/598/1_1db045d5e58a0b9c9fb4c0bf492921f1.png?t=16333'
+    'https://www.eapteka.ru/upload/offer_photo/'
+    '261/464/1_47835b302685b394d43767f20d37d1ed.png?t=16333'
+)
+"""Проблемные изображения."""
+
 ATTEMPTION_LOAD_FEED = 3
 """Попытки для скачивания фида."""
 

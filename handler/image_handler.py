@@ -64,8 +64,6 @@ class XMLImage(FileMixin):
                 url,
                 error
             )
-            if response_content:
-                return response_content, 'png'
             return None, None
         except Exception as error:
             logging.error(
@@ -118,6 +116,8 @@ class XMLImage(FileMixin):
         image_filename: str
     ):
         """Защищенный метод, сохраняет изображение по указанному пути."""
+        if not image_data:
+            return
         try:
             file_path = folder_path / image_filename
             with open(file_path, 'wb') as f:
