@@ -1,6 +1,6 @@
 # from handler.constants import CUSTOM_LABEL, UNAVAILABLE_OFFER_ID_LIST
 from handler.decorators import time_of_function, time_of_script
-from handler.utils import initialize_components, save_to_database
+from handler.utils import initialize_components  # save_to_database
 
 
 @time_of_script
