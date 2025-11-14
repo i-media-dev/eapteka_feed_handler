@@ -39,22 +39,38 @@ class XMLImage(FileMixin):
         self.new_image_folder = new_image_folder
         self.feeds_list = feeds_list
         self.number_pixels_image = number_pixels_image
-        self._existing_image_offers = set()
-        self._existing_framed_offers = set()
+        self._existing_image_offers: set = set()
+        self._existing_framed_offers: set = set()
 
     def _get_image_data(self, url: str) -> tuple:
         """
         Защищенный метод, загружает данные изображения
         и возвращает (image_data, image_format).
         """
+        response_content = None
         try:
             response = requests.get(url)
             response.raise_for_status()
-            image = Image.open(BytesIO(response.content))
+            response_content = response.content
+            image = Image.open(BytesIO(response_content))
             image_format = image.format.lower() if image.format else None
-            return response.content, image_format
-        except Exception as e:
-            logging.error(f'Ошибка при загрузке изображения {url}: {e}')
+            return response_content, image_format
+        except requests.exceptions.RequestException as error:
+            logging.error('Ошибка сети при загрузке URL %s: %s', url, error)
+            return None, None
+        except IOError as error:
+            logging.error(
+                'Pillow не смог распознать изображение из URL %s: %s',
+                url,
+                error
+            )
+            return None, None
+        except Exception as error:
+            logging.error(
+                'Непредвиденная ошибка при обработке изображения %s: %s',
+                url,
+                error
+            )
             return None, None
 
     def _get_image_filename(
@@ -78,16 +94,18 @@ class XMLImage(FileMixin):
                     target_set.add(offer_image)
 
             logging.info(
-                f'Построен кэш для {len(target_set)} файлов'
+                'Построен кэш для %s файлов',
+                len(target_set)
             )
         except EmptyFeedsListError:
             raise
         except DirectoryCreationError:
             raise
-        except Exception as e:
+        except Exception as error:
             logging.error(
                 'Неожиданная ошибка при сборе множества '
-                f'скачанных изображений: {e}'
+                'скачанных изображений: %s',
+                error
             )
             raise
 
@@ -103,8 +121,12 @@ class XMLImage(FileMixin):
                 file_path = folder_path / image_filename
                 img.load()
                 img.save(file_path)
-        except Exception as e:
-            logging.error(f'Ошибка при сохранении {image_filename}: {e}')
+        except Exception as error:
+            logging.error(
+                'Ошибка при сохранении %s: %s',
+                image_filename,
+                error
+            )
 
     @time_of_function
     def get_images(self):
@@ -132,7 +154,7 @@ class XMLImage(FileMixin):
                 offers = root.findall('.//offer')
 
                 if not offers:
-                    logging.debug(f'В файле {file_name} не найдено offers')
+                    logging.debug('В файле %s не найдено offers', file_name)
                     continue
 
                 for offer in offers:
@@ -173,17 +195,24 @@ class XMLImage(FileMixin):
                     )
                     images_downloaded += 1
             logging.info(
-                f'\n Всего обработано фидов - {len(file_name_list)}\n'
-                f'Всего обработано офферов - {total_offers_processed}\n'
-                'Всего офферов с подходящими '
-                f'изображениями - {offers_with_images}\n'
-                f'Всего изображений скачано {images_downloaded}\n'
-                f'Пропущено изображений no_photo - {images_skipped_no_photo}\n'
-                'Пропущено офферов с уже скачанными '
-                f'изображениями - {offers_skipped_existing}'
+                '\nВсего обработано фидов - %s'
+                '\nВсего обработано офферов - %s'
+                '\nВсего офферов с подходящими изображениями - %s'
+                '\nВсего изображений скачано - %s'
+                '\nПропущено изображений no_photo - %s'
+                '\nПропущено офферов с уже скачанными изображениями - %s',
+                len(file_name_list),
+                total_offers_processed,
+                offers_with_images,
+                images_downloaded,
+                images_skipped_no_photo,
+                offers_skipped_existing
             )
-        except Exception as e:
-            logging.error(f'Неожиданная ошибка при получении изображений: {e}')
+        except Exception as error:
+            logging.error(
+                'Неожиданная ошибка при получении изображений: %s',
+                error
+            )
 
     @time_of_function
     def add_frame(self):
@@ -256,13 +285,16 @@ class XMLImage(FileMixin):
                 )
                 total_framed_images += 1
             logging.info(
-                '\nКоличество изображений, к которым добавлена '
-                f'рамка - {total_framed_images}\n'
-                f'Количество уже обрамленных изображений - {skipped_images}\n'
-                'Количество изображений обрамленных '
-                f'неудачно - {total_failed_images}'
-
+                '\nКоличество изображений, к которым добавлена рамка - %s'
+                '\nКоличество уже обрамленных изображений - %s'
+                '\nКоличество изображений обрамленных неудачно - %s'
+                total_framed_images,
+                skipped_images,
+                total_failed_images
             )
-        except Exception as e:
-            logging.error(f'Критическая ошибка в процессе обрамления: {e}')
+        except Exception as error:
+            logging.error(
+                'Критическая ошибка в процессе обрамления: %s',
+                error
+            )
             raise
