@@ -64,6 +64,8 @@ class XMLImage(FileMixin):
                 url,
                 error
             )
+            if response_content:
+                return response_content, 'png'
             return None, None
         except Exception as error:
             logging.error(
