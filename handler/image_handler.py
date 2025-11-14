@@ -119,10 +119,10 @@ class XMLImage(FileMixin):
     ):
         """Защищенный метод, сохраняет изображение по указанному пути."""
         try:
-            with Image.open(BytesIO(image_data)) as img:
-                file_path = folder_path / image_filename
-                img.load()
-                img.save(file_path)
+            file_path = folder_path / image_filename
+            with open(file_path, 'wb') as f:
+                f.write(image_data)
+            logging.debug('Изображение сохранено: %s', file_path)
         except Exception as error:
             logging.error(
                 'Ошибка при сохранении %s: %s',
