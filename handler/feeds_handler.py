@@ -71,7 +71,7 @@ class XMLHandler(FileMixin):
         offer_counts: dict = defaultdict(int)
         all_offers = {}
         for file_name in file_names:
-            tree = self._get_tree(file_name, self.feeds_folder)
+            tree = self._get_tree(file_name, self.new_feeds_folder)
             root = tree.getroot()
             offers = root.findall('.//offer')
 
@@ -94,7 +94,7 @@ class XMLHandler(FileMixin):
         по принципу inner join (результирующий фид содержит
         только те офферы, которые встречаются сразу во всех фидах).
         """
-        file_names: list[str] = self._get_filenames_list(self.feeds_folder)
+        file_names: list[str] = self._get_filenames_list(self.new_feeds_folder)
         offer_counts, all_offers = self._collect_all_offers(file_names)
         root, offers = self._super_feed()
         for offer_id, count in offer_counts.items():
@@ -111,7 +111,7 @@ class XMLHandler(FileMixin):
         по принципу full outer join (результирующий фид
         содержит все встречающиеся офферы).
         """
-        file_names: list[str] = self._get_filenames_list(self.feeds_folder)
+        file_names: list[str] = self._get_filenames_list(self.new_feeds_folder)
         _, all_offers = self._collect_all_offers(file_names)
         root, offers = self._super_feed()
         for offer in all_offers.values():
@@ -321,19 +321,16 @@ class XMLHandler(FileMixin):
         return image_dict
 
     @time_of_function
-    def image_replacement(self, filenames: list[str] | None = None):
+    def image_replacement(self):
         """Метод, подставляющий в фиды новые изображения."""
         deleted_images = 0
         input_images = 0
         try:
             image_dict = self._get_image_dict()
-            feeds_folder = self.new_feeds_folder
-            if not filenames:
-                filenames = self._get_filenames_list(self.feeds_folder)
-                feeds_folder = self.feeds_folder
+            filenames = self._get_filenames_list(self.feeds_folder)
 
             for filename in filenames:
-                tree = self._get_tree(filename, feeds_folder)
+                tree = self._get_tree(filename, self.feeds_folder)
                 root = tree.getroot()
 
                 offers = list(root.findall('.//offer'))
@@ -359,7 +356,7 @@ class XMLHandler(FileMixin):
                 self._save_xml(root, self.new_feeds_folder, filename)
 
             logging.info(
-                '\nКоличество удаленных изображений в оффере - %s'
+                '\nКоличество удаленных изображений - %s'
                 '\nКоличество добавленных изображений - %s',
                 deleted_images,
                 input_images
