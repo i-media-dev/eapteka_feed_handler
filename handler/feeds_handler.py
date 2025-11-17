@@ -327,11 +327,13 @@ class XMLHandler(FileMixin):
         input_images = 0
         try:
             image_dict = self._get_image_dict()
+            feeds_folder = self.new_feeds_folder
             if not filenames:
                 filenames = self._get_filenames_list(self.feeds_folder)
+                feeds_folder = self.feeds_folder
 
             for filename in filenames:
-                tree = self._get_tree(filename, self.feeds_folder)
+                tree = self._get_tree(filename, feeds_folder)
                 root = tree.getroot()
 
                 offers = list(root.findall('.//offer'))
