@@ -321,16 +321,17 @@ class XMLHandler(FileMixin):
         return image_dict
 
     @time_of_function
-    def image_replacement(self):
+    def image_replacement(self, filenames: list[str] | None = None):
         """Метод, подставляющий в фиды новые изображения."""
         deleted_images = 0
         input_images = 0
         try:
             image_dict = self._get_image_dict()
-            filenames_list = self._get_filenames_list(self.feeds_folder)
+            if not filenames:
+                filenames = self._get_filenames_list(self.feeds_folder)
 
-            for file_name in filenames_list:
-                tree = self._get_tree(file_name, self.feeds_folder)
+            for filename in filenames:
+                tree = self._get_tree(filename, self.feeds_folder)
                 root = tree.getroot()
 
                 offers = list(root.findall('.//offer'))
@@ -339,12 +340,12 @@ class XMLHandler(FileMixin):
                     if not offer_id:
                         continue
 
-                    pictures = offer.findall('picture')
-                    for picture in pictures:
-                        offer.remove(picture)
-                    deleted_images += len(pictures)
-
                     if offer_id in image_dict:
+                        pictures = offer.findall('picture')
+                        for picture in pictures:
+                            offer.remove(picture)
+                        deleted_images += len(pictures)
+
                         for img_file in image_dict[offer_id]:
                             picture_tag = ET.SubElement(offer, 'picture')
                             picture_tag.text = (
@@ -352,7 +353,9 @@ class XMLHandler(FileMixin):
                                 f'{ADDRESS}/{img_file}'
                             )
                             input_images += 1
-                self._save_xml(root, self.new_feeds_folder, file_name)
+
+                self._save_xml(root, self.new_feeds_folder, filename)
+
             logging.info(
                 '\nКоличество удаленных изображений в оффере - %s'
                 '\nКоличество добавленных изображений - %s',
