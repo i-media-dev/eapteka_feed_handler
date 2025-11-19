@@ -169,6 +169,9 @@ def retry_on_network_error(
                 except (
                     IncompleteRead,
                     ConnectionResetError,
+                    ConnectionError,
+                    ConnectionAbortedError,
+                    ConnectionRefusedError,
                     requests.exceptions.ConnectionError,
                     requests.exceptions.ChunkedEncodingError,
                     requests.exceptions.ReadTimeout

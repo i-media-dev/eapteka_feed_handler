@@ -52,7 +52,7 @@ class XMLSaver(FileMixin):
                 feed,
                 auth=(username, password),
                 stream=True,
-                timeout=(10, 60)
+                timeout=(30, 300)
             )
 
             if response.status_code == requests.codes.ok:
