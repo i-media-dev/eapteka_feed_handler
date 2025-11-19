@@ -75,6 +75,9 @@ MAX_RETRIES = 5
 NAME_OF_SHOP = 'eapteka'
 """Константа названия магазина."""
 
+JOIN_FEEDS_FOLDER = os.getenv('JOIN_FEEDS_FOLDER', 'join_feeds')
+"""Константа стокового названия директории с объединенными фидами."""
+
 FRAME_FOLDER = os.getenv('FRAME_FOLDER', 'frame')
 """Константа стокового названия директории c рамкой"""
 
