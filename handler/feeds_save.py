@@ -17,6 +17,7 @@ from handler.logging_config import setup_logging
 from handler.mixins import FileMixin
 
 setup_logging()
+logger = logging.getLogger(__name__)
 
 
 class XMLSaver(FileMixin):
@@ -67,7 +68,7 @@ class XMLSaver(FileMixin):
                 return None
 
         except requests.RequestException as error:
-            logging.error('Ошибка при загрузке %s: %s', feed, error)
+            logger.bot_event('Ошибка при загрузке %s: %s', feed, error)
             return None
 
     def _get_filename(self, feed: str) -> str:
@@ -177,7 +178,7 @@ class XMLSaver(FileMixin):
                 except Exception as exc:
                     logging.error(
                         'Фид %s сгенерировал исключение: %s', feed, exc)
-        logging.info(
+        logger.bot_event(
             'Успешно записано %s файлов из %s.',
             saved_files,
             total_files
