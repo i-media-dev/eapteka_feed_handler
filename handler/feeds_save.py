@@ -52,7 +52,7 @@ class XMLSaver(FileMixin):
             response = requests.get(
                 feed,
                 auth=(username, password),
-                stream=True,
+                stream=False,
                 timeout=(30, 300)
             )
 
