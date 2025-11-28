@@ -177,7 +177,8 @@ def retry_on_network_error(
                     ConnectionRefusedError,
                     requests.exceptions.ConnectionError,
                     requests.exceptions.ChunkedEncodingError,
-                    requests.exceptions.ReadTimeout
+                    requests.exceptions.ReadTimeout,
+                    requests.exceptions.RequestException
                 ) as error:
                     last_exception = error
                     if attempt < max_attempts:
