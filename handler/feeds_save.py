@@ -43,7 +43,7 @@ class XMLSaver(FileMixin):
         self.max_workers = max_workers
         self.max_load_attempt = max_load_attempt
 
-    @retry_on_network_error(max_attempts=3, delays=(2, 5, 10))
+    @retry_on_network_error(max_attempts=3, delays=(5, 15, 30))
     def _get_file(self, feed: str):
         """Защищенный метод, получает фид по ссылке."""
         try:

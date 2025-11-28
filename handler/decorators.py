@@ -8,8 +8,9 @@ from http.client import IncompleteRead
 import mysql.connector
 import requests
 
-from handler.constants import (ATTEMPTION_LOAD_FEED, DATE_FORMAT, MAX_RETRIES,
-                               TIME_DELAY, TIME_FORMAT)
+from handler.constants import (ATTEMPTION_LOAD_FEED, DATE_FORMAT,
+                               DELAY_FOR_RETRY, MAX_RETRIES, TIME_DELAY,
+                               TIME_FORMAT)
 from handler.db_config import config
 from handler.exceptions import (DirectoryCreationError, EmptyFeedsListError,
                                 GetTreeError, StructureXMLError)
@@ -155,7 +156,7 @@ def connection_db(func):
 
 def retry_on_network_error(
     max_attempts=ATTEMPTION_LOAD_FEED,
-    delays=(5, 15, 30)
+    delays=DELAY_FOR_RETRY
 ):
     """Декоратор для повторных попыток скачивания при сетевых ошибках."""
     def decorator(func):

@@ -22,7 +22,10 @@ PROBLEM_IMAGES = (
 ATTEMPTION_LOAD_FEED = 3
 """Попытки для скачивания фида."""
 
-MAX_WORKERS = 10
+DELAY_FOR_RETRY = (5, 15, 30)
+"""Задержки между переподключениями."""
+
+MAX_WORKERS = 5
 """Количество одновременно запущенных потоков."""
 
 PROTOCOL = 'https'
