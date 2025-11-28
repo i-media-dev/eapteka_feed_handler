@@ -47,7 +47,7 @@ def test_get_file_success(mock_get, sample_feeds, mock_response):
     mock_get.assert_called_once_with(
         'https://example.com/feed.xml',
         auth=('test_user', 'test_pass'),
-        stream=True,
+        stream=False,
         timeout=(30, 300)
     )
 
