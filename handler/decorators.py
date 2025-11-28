@@ -155,7 +155,7 @@ def connection_db(func):
 
 def retry_on_network_error(
     max_attempts=ATTEMPTION_LOAD_FEED,
-    delays=(2, 5, 10)
+    delays=(5, 15, 30)
 ):
     """Декоратор для повторных попыток скачивания при сетевых ошибках."""
     def decorator(func):

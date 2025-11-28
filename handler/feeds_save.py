@@ -65,11 +65,13 @@ class XMLSaver(FileMixin):
                     response.status_code,
                     feed
                 )
-                return None
+                raise requests.exceptions.HTTPError(
+                    f'HTTP {response.status_code} для {feed}'
+                )
 
         except requests.RequestException as error:
             logger.bot_event('Ошибка при загрузке %s: %s', feed, error)
-            return None
+            raise
 
     def _get_filename(self, feed: str) -> str:
         """Защищенный метод, формирующий имя xml-файлу."""
@@ -128,12 +130,8 @@ class XMLSaver(FileMixin):
         """Обрабатывает один фид: скачивает, валидирует и сохраняет."""
         file_name = self._get_filename(feed)
         file_path = folder_path / file_name
-        response = self._get_file(feed)
-
-        if response is None:
-            logging.warning('Фид %s не получен.', file_name)
-            return False
         try:
+            response = self._get_file(feed)
             xml_content = response.content
             decoded_content, encoding = self._validate_xml(xml_content)
             xml_tree = ET.fromstring(decoded_content)
@@ -141,9 +139,11 @@ class XMLSaver(FileMixin):
             tree = ET.ElementTree(xml_tree)
             with open(file_path, 'wb') as file:
                 tree.write(file, encoding=encoding, xml_declaration=True)
-            logging.info(f'Файл {file_name} успешно сохранен')
+            logging.info('Файл %s успешно сохранен', file_name)
             return True
-
+        except requests.exceptions.RequestException as error:
+            logging.warning('Фид %s не получен: %s', file_name, error)
+            return False
         except (EmptyXMLError, InvalidXMLError) as error:
             logging.error('Ошибка валидации XML %s: %s', file_name, error)
             return False
