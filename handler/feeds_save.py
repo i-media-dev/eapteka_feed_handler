@@ -141,7 +141,7 @@ class XMLSaver(FileMixin):
                 tree.write(file, encoding=encoding, xml_declaration=True)
             logging.info('Файл %s успешно сохранен', file_name)
             return True
-        except requests.exceptions.RequestException as error:
+        except (requests.exceptions.HTTPError,) as error:
             logging.warning('Фид %s не получен: %s', file_name, error)
             return False
         except (EmptyXMLError, InvalidXMLError) as error:
