@@ -16,8 +16,10 @@ from handler.exceptions import StructureXMLError
 from handler.feeds import FEEDS
 from handler.logging_config import setup_logging
 from handler.mixins import FileMixin
+from handler.allowed_urls import ALLOWED_URLS
 
 setup_logging()
+logger = logging.getLogger(__name__)
 
 
 class XMLHandler(FileMixin):
@@ -364,4 +366,51 @@ class XMLHandler(FileMixin):
 
         except Exception as error:
             logging.error('Ошибка в image_replacement: %s', error)
+            raise
+
+    def url_filter(
+        self,
+        filename: str = 'msc.xml',
+        param: str = 'referrer=reattribution%3D1'
+    ):
+        suitable_urls = 0
+        skipped_urls = 0
+        try:
+            tree = self._get_tree(filename, self.new_feeds_folder)
+            root = tree.getroot()
+            offers = list(root.findall('.//offer'))
+            for offer in offers:
+                url_elem = offer.find('url')
+                if url_elem is None:
+                    continue
+
+                url = url_elem.text
+                if not url:
+                    continue
+
+                url_without_parameters = url.split('?')[0]
+
+                if url_without_parameters not in ALLOWED_URLS:
+                    skipped_urls += 1
+                    continue
+
+                new_url = url_without_parameters + param
+                url_elem.text = new_url
+                suitable_urls += 1
+                new_filename = f'dyn_{filename}'
+            logger.bot_event(
+                'Подходищие urls в фиде %s - %s',
+                filename,
+                suitable_urls
+            )
+            logger.bot_event(
+                'Неподходящие urls в фиде %s - %s',
+                filename,
+                skipped_urls
+            )
+
+            self._save_xml(root, self.new_feeds_folder, new_filename)
+            logging.info('Копия фида сохранена - %s', new_filename)
+        except Exception as error:
+            logging.error('Неожиданная ошибка: %s', error)
             raise

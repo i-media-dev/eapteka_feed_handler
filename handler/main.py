@@ -16,6 +16,7 @@ def main():
     handler_client.image_replacement()
     handler_client.full_outer_join_feeds()
     handler_client.inner_join_feeds()
+    handler_client.url_filter('msc.xml')
 
 
 if __name__ == '__main__':
