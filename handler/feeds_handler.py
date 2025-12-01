@@ -7,6 +7,7 @@ from datetime import datetime as dt
 
 import numpy as np
 
+from handler.allowed_urls import ALLOWED_URLS
 from handler.calculation import clear_avg, clear_max, clear_median, clear_min
 from handler.constants import (ADDRESS, DATE_FORMAT, DECIMAL_ROUNDING,
                                DOMEN_FTP, FEEDS_FOLDER, NEW_FEEDS_FOLDER,
@@ -16,7 +17,6 @@ from handler.exceptions import StructureXMLError
 from handler.feeds import FEEDS
 from handler.logging_config import setup_logging
 from handler.mixins import FileMixin
-from handler.allowed_urls import ALLOWED_URLS
 
 setup_logging()
 logger = logging.getLogger(__name__)
