@@ -409,7 +409,7 @@ class XMLHandler(FileMixin):
                 skipped_urls
             )
 
-            self._save_xml(root, self.new_feeds_folder, new_filename)
+            self._save_xml(root, 'join_feeds', new_filename)
             logging.info('Копия фида сохранена - %s', new_filename)
         except Exception as error:
             logging.error('Неожиданная ошибка: %s', error)
