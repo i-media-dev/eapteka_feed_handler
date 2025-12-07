@@ -398,12 +398,12 @@ class XMLHandler(FileMixin):
                 url_elem.text = new_url
                 suitable_urls += 1
                 new_filename = f'dyn_{filename}'
-            logger.bot_event(
+            logging.info(
                 'Подходищие urls в фиде %s - %s',
                 filename,
                 suitable_urls
             )
-            logger.bot_event(
+            logging.info(
                 'Неподходящие urls в фиде %s - %s',
                 filename,
                 skipped_urls

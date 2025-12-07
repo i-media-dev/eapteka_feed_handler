@@ -70,7 +70,7 @@ class XMLSaver(FileMixin):
                 )
 
         except requests.RequestException as error:
-            logger.bot_event('Ошибка при загрузке %s: %s', feed, error)
+            logging.error('Ошибка при загрузке %s: %s', feed, error)
             raise
 
     def _get_filename(self, feed: str) -> str:
