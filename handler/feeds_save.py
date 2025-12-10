@@ -20,7 +20,7 @@ setup_logging()
 logger = logging.getLogger(__name__)
 
 
-class XMLSaver(FileMixin):
+class FeedSaver(FileMixin):
     """
     Класс, предоставляющий интерфейс для скачивания,
     валидации и сохранения фида в xml-файл.

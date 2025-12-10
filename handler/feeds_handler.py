@@ -1,19 +1,10 @@
-import json
 import logging
-import os
 import xml.etree.ElementTree as ET
-from collections import defaultdict
-from datetime import datetime as dt
-
-import numpy as np
 
 from handler.allowed_urls import ALLOWED_URLS
-from handler.calculation import clear_avg, clear_max, clear_median, clear_min
-from handler.constants import (ADDRESS, DATE_FORMAT, DECIMAL_ROUNDING,
-                               DOMEN_FTP, FEEDS_FOLDER, NEW_FEEDS_FOLDER,
-                               NEW_IMAGE_FOLDER, PROTOCOL)
+from handler.constants import (ADDRESS, DOMEN_FTP, FEEDS_FOLDER,
+                               NEW_FEEDS_FOLDER, NEW_IMAGE_FOLDER, PROTOCOL)
 from handler.decorators import time_of_function, try_except
-from handler.exceptions import StructureXMLError
 from handler.feeds import FEEDS
 from handler.logging_config import setup_logging
 from handler.mixins import FileMixin
@@ -22,7 +13,7 @@ setup_logging()
 logger = logging.getLogger(__name__)
 
 
-class XMLHandler(FileMixin):
+class FeedHandler(FileMixin):
     """
     Класс, предоставляющий интерфейс
     для обработки xml-файлов.
@@ -30,355 +21,143 @@ class XMLHandler(FileMixin):
 
     def __init__(
         self,
+        filename: str,
         feeds_folder: str = FEEDS_FOLDER,
         new_feeds_folder: str = NEW_FEEDS_FOLDER,
         new_image_folder: str = NEW_IMAGE_FOLDER,
         feeds_list: tuple[str, ...] = FEEDS
     ) -> None:
+        self.filename = filename
         self.feeds_folder = feeds_folder
         self.new_feeds_folder = new_feeds_folder
         self.feeds_list = feeds_list
         self.new_image_folder = new_image_folder
+        self._root = None
+        self._is_modified = False
 
-    def _save_xml(self, elem, file_folder, filename) -> None:
-        """Защищенный метод, сохраняет отформатированные файлы."""
-        root = elem
-        self._indent(root)
-        formatted_xml = ET.tostring(root, encoding='windows-1251')
-        file_path = self._make_dir(file_folder)
-        with open(
-            file_path / filename,
-            'wb'
-        ) as f:
-            f.write(formatted_xml)
+    @property
+    def root(self):
+        """Ленивая загрузка корневого элемента."""
+        if self._root is None:
+            self._root = self._get_root(self.filename, self.feeds_folder)
+        return self._root
 
-    def _super_feed(self):
-        """Защищенный метод, создает шаблон фида с пустыми offers."""
-        file_names: list[str] = self._get_filenames_list(self.feeds_folder)
-        first_file_tree = self._get_tree(file_names[0], self.feeds_folder)
-        root = first_file_tree.getroot()
-        offers = root.find('.//offers')
-        if offers is not None:
-            offers.clear()
-        else:
-            raise StructureXMLError(
-                'Тег пуст или структура фида не соответствует ожидаемой.'
-            )
-        return root, offers
+    @try_except
+    def change_available(self, offers_id_list: list, flag: str):
+        offers = self.root.findall('.//offer')
 
-    def _collect_all_offers(self, file_names: list[str]) -> tuple[dict, dict]:
-        """
-        Защищенный метод, подсчитывает встречался ли оффер в том или ином фиде.
-        """
-        offer_counts: dict = defaultdict(int)
-        all_offers = {}
-        for file_name in file_names:
-            tree = self._get_tree(file_name, self.new_feeds_folder)
-            root = tree.getroot()
-            offers = root.findall('.//offer')
+        if not offers:
+            logging.error('В файле %s не найдено offers', self.filename)
+            raise
 
-            if not offers:
-                logging.debug('В файле %s не найдено offers', file_name)
-                continue
-
-            for offer in offers:
-                offer_id = offer.get('id')
-                if offer_id:
-                    offer_counts[offer_id] += 1
-                    all_offers[offer_id] = offer
-        return offer_counts, all_offers
+        for offer in offers:
+            offer_id = offer.get('id')
+            if offer_id in offers_id_list:
+                offer.set('available', flag)
+                self._is_modified = True
+        return self
 
     @time_of_function
     @try_except
-    def inner_join_feeds(self) -> bool:
-        """
-        Метод, объединяющий все офферы в один фид
-        по принципу inner join (результирующий фид содержит
-        только те офферы, которые встречаются сразу во всех фидах).
-        """
-        file_names: list[str] = self._get_filenames_list(self.new_feeds_folder)
-        offer_counts, all_offers = self._collect_all_offers(file_names)
-        root, offers = self._super_feed()
-        for offer_id, count in offer_counts.items():
-            if count == len(file_names):
-                offers.append(all_offers[offer_id])
-        self._save_xml(root, 'join_feeds', 'inner_join_feed.xml')
-        return True
-
-    @time_of_function
-    @try_except
-    def full_outer_join_feeds(self) -> bool:
-        """
-        Метод, объединяющий все офферы в один фид
-        по принципу full outer join (результирующий фид
-        содержит все встречающиеся офферы).
-        """
-        file_names: list[str] = self._get_filenames_list(self.new_feeds_folder)
-        _, all_offers = self._collect_all_offers(file_names)
-        root, offers = self._super_feed()
-        for offer in all_offers.values():
-            offers.append(offer)
-        self._save_xml(root, 'join_feeds', 'full_outer_join_feed.xml')
-        return True
-
-    @time_of_function
-    @try_except
-    def process_feeds(
+    def add_custom_label(
         self,
         custom_label: dict[str, dict],
-        offers_id_list: list[str],
-        flag: str = 'false'
-    ) -> bool:
+    ):
         """
         Метод, подставляющий в фиды данные
         из настраиваемого словаря CUSTOM_LABEL.
         """
-        for file_name in self._get_filenames_list(self.feeds_folder):
-            tree = self._get_tree(file_name, self.feeds_folder)
-            root = tree.getroot()
-            offers = root.findall('.//offer')
+        offers = self.root.findall('.//offer')
 
-            if not offers:
-                logging.debug('В файле %s не найдено offers', file_name)
+        if not offers:
+            logging.error('В файле %s не найдено offers', self.filename)
+            raise
+
+        for offer in offers:
+            offer_name_text = offer.findtext('name')
+            offer_url_text = offer.findtext('url')
+            offer_id = offer.get('id')
+            if None in (
+                offer_name_text,
+                offer_url_text,
+                offer_id
+            ):
                 continue
-
-            for offer in offers:
-                offer_name_text = offer.findtext('name')
-                offer_url_text = offer.findtext('url')
-                offer_id = offer.get('id')
-                if None in (
-                    offer_name_text,
-                    offer_url_text,
-                    offer_id
-                ):
-                    continue
-                if offer_id in offers_id_list:
-                    offer.set('available', flag)
-                existing_nums = set()
-                for element in offer.findall('*'):
-                    if element.tag.startswith('custom_label_'):
-                        try:
-                            existing_nums.add(
-                                int(element.tag.split('_')[-1]))
-                        except ValueError:
-                            continue
-                for label_name, conditions in custom_label.items():
-                    name_match = any(
-                        sub.lower() in offer_name_text.lower()
-                        for sub in conditions.get('name', [])
-                    )
-                    url_match = any(
-                        sub.lower() in offer_url_text.lower()
-                        for sub in conditions.get('url', [])
-                    )
-                    id_match = offer_id in conditions.get('id', [])
-                    if name_match or url_match or id_match:
-                        next_num = 0
-                        while next_num in existing_nums:
-                            next_num += 1
-                        existing_nums.add(next_num)
-                        ET.SubElement(
-                            offer, f'custom_label_{next_num}'
-                        ).text = label_name
-            self._save_xml(root, self.new_feeds_folder, f'new_{file_name}')
-        return True
+            existing_nums = set()
+            for element in offer.findall('*'):
+                if element.tag.startswith('custom_label_'):
+                    try:
+                        existing_nums.add(
+                            int(element.tag.split('_')[-1]))
+                    except ValueError:
+                        continue
+            for label_name, conditions in custom_label.items():
+                name_match = any(
+                    sub.lower() in offer_name_text.lower()
+                    for sub in conditions.get('name', [])
+                )
+                url_match = any(
+                    sub.lower() in offer_url_text.lower()
+                    for sub in conditions.get('url', [])
+                )
+                id_match = offer_id in conditions.get('id', [])
+                if name_match or url_match or id_match:
+                    next_num = 0
+                    while next_num in existing_nums:
+                        next_num += 1
+                    existing_nums.add(next_num)
+                    ET.SubElement(
+                        offer, f'custom_label_{next_num}'
+                    ).text = label_name
+                    self._is_modified = True
+        return self
 
     @time_of_function
-    @try_except
-    def get_offers_report(self) -> list[dict]:
-        """Метод, формирующий отчет по офферам."""
-        result = []
-        date_str = (dt.now()).strftime(DATE_FORMAT)
-        for file_name in self._get_filenames_list(self.feeds_folder):
-            tree = self._get_tree(file_name, self.feeds_folder)
-            root = tree.getroot()
-            categories = root.findall('.//category')
-            offers = root.findall('.//offer')
-
-            if not categories:
-                logging.debug('В файле %s не найдено category', file_name)
-                continue
-
-            if not offers:
-                logging.debug('В файле %s не найдено offers', file_name)
-                continue
-
-            category_data = {}
-            all_categories = {}
-
-            for category in categories:
-                category_name = category.text
-                category_id = category.get('id')
-                parent_id = category.get('parentId')
-                all_categories[category_id] = parent_id
-                category_data[category_id] = {
-                    'prices': [],
-                    'category_name': category_name,
-                    'offers_count': 0
-                }
-
-            for offer in offers:
-                category_id = offer.findtext('categoryId')
-                price = offer.findtext('price')
-                if category_id and price:
-                    if category_id not in category_data:
-                        category_data[category_id] = {
-                            'prices': [],
-                            'category_name': '',
-                            'offers_count': 0
-                        }
-                    category_data[category_id]['prices'].append(float(price))
-                    category_data[category_id]['offers_count'] += 1
-
-            def aggregate_data(category_id):
-                prices = category_data[category_id]['prices'].copy()
-                offers_count = category_data[category_id]['offers_count']
-
-                for child_id, parent_id in all_categories.items():
-                    if parent_id == category_id:
-                        child_prices, child_count = aggregate_data(child_id)
-                        prices.extend(child_prices)
-                        offers_count += child_count
-                category_data[category_id]['prices'] = prices
-                category_data[category_id]['offers_count'] = offers_count
-                return prices, offers_count
-
-            root_categories = [
-                cat_id for cat_id, parent_id in all_categories.items()
-                if parent_id is None
-            ]
-            for root_id in root_categories:
-                aggregate_data(root_id)
-
-            for category_id, data in category_data.items():
-                count_offers = data['offers_count']
-                price_list = data['prices']
-                parent_id = all_categories.get(category_id)
-                category_name = data['category_name']
-
-                result.append({
-                    'date': date_str,
-                    'feed_name': file_name,
-                    'category_name': category_name,
-                    'category_id': category_id,
-                    'parent_id': parent_id,
-                    'count_offers': count_offers,
-                    'min_price': min(price_list) if price_list else 0,
-                    'clear_min_price': clear_min(price_list)
-                    if price_list else 0,
-                    'max_price': max(price_list) if price_list else 0,
-                    'clear_max_price': clear_max(price_list)
-                    if price_list else 0,
-                    'avg_price': round(
-                        sum(price_list) / len(price_list), DECIMAL_ROUNDING
-                    ) if price_list else 0,
-                    'clear_avg_price': clear_avg(price_list)
-                    if price_list else 0,
-                    'median_price': round(
-                        np.median(price_list), DECIMAL_ROUNDING
-                    ) if price_list else 0,
-                    'clear_median_price': clear_median(price_list)
-                    if price_list else 0
-                })
-        return result
-
-    def save_to_json(
-        self,
-        data: list[dict],
-        prefix: str = 'offers_report',
-        folder: str = 'data'
-    ) -> None:
-        """Отладочный метод сохраняет данные в файл формата json."""
-        os.makedirs(folder, exist_ok=True)
-        date_str = (dt.now()).strftime(DATE_FORMAT)
-        filename = os.path.join(folder, f'{prefix}_{date_str}.json')
-        with open(filename, 'w', encoding='utf-8') as f:
-            json.dump(data, f, ensure_ascii=False, indent=2)
-        logging.info(f'✅ Данные сохранены в {filename}')
-        logging.debug('Файл сохранен.')
-
-    def _get_image_dict(self):
-        image_dict = {}
-        filenames_list = self._get_filenames_list(self.new_image_folder)
-        for img_file in filenames_list:
-            try:
-                offer_id = img_file.split('.')[0]
-                if offer_id not in image_dict:
-                    image_dict[offer_id] = []
-                image_dict[offer_id].append(img_file)
-            except (ValueError, IndexError):
-                logging.warning(
-                    'Не удалось присвоить изображение %s ключу %s',
-                    img_file,
-                    offer_id
-                )
-                continue
-            except Exception as error:
-                logging.error(
-                    'Неожиданная ошибка во время '
-                    'сборки словаря image_dict: %s',
-                    error
-                )
-                raise
-        return image_dict
-
-    @time_of_function
-    def image_replacement(self):
+    def replace_images(self):
         """Метод, подставляющий в фиды новые изображения."""
         deleted_images = 0
         input_images = 0
         try:
-            image_dict = self._get_image_dict()
-            filenames = self._get_filenames_list(self.feeds_folder)
+            image_dict = self._get_files_dict(self.new_image_folder)
 
-            for filename in filenames:
-                tree = self._get_tree(filename, self.feeds_folder)
-                root = tree.getroot()
+            offers = self.root.findall('.//offer')
+            for offer in offers:
+                offer_id = offer.get('id')
+                if not offer_id:
+                    continue
 
-                offers = list(root.findall('.//offer'))
-                for offer in offers:
-                    offer_id = offer.get('id')
-                    if not offer_id:
-                        continue
+                if offer_id in image_dict:
+                    pictures = offer.findall('picture')
+                    for picture in pictures:
+                        offer.remove(picture)
+                    deleted_images += len(pictures)
 
-                    if offer_id in image_dict:
-                        pictures = offer.findall('picture')
-                        for picture in pictures:
-                            offer.remove(picture)
-                        deleted_images += len(pictures)
-
-                        for img_file in image_dict[offer_id]:
-                            picture_tag = ET.SubElement(offer, 'picture')
-                            picture_tag.text = (
-                                f'{PROTOCOL}://{DOMEN_FTP}/'
-                                f'{ADDRESS}/{img_file}'
-                            )
-                            input_images += 1
-
-                self._save_xml(root, self.new_feeds_folder, filename)
-
+                    picture_tag = ET.SubElement(offer, 'picture')
+                    picture_tag.text = (
+                        f'{PROTOCOL}://{DOMEN_FTP}/'
+                        f'{ADDRESS}/{image_dict[offer_id]}'
+                    )
+                    input_images += 1
+                    self._is_modified = True
             logging.info(
                 '\nКоличество удаленных изображений - %s'
                 '\nКоличество добавленных изображений - %s',
                 deleted_images,
                 input_images
             )
-
+            return self
         except Exception as error:
             logging.error('Ошибка в image_replacement: %s', error)
             raise
 
     def url_filter(
         self,
-        filename: str = 'msc.xml',
         param: str = 'referrer=reattribution%3D1'
     ):
         suitable_urls = 0
         skipped_urls = 0
         try:
-            tree = self._get_tree(filename, self.new_feeds_folder)
-            root = tree.getroot()
-            offers = list(root.findall('.//offer'))
+            offers = self.root.findall('.//offer')
             for offer in offers:
                 url_elem = offer.find('url')
                 if url_elem is None:
@@ -397,20 +176,45 @@ class XMLHandler(FileMixin):
                 new_url = url_without_parameters + param
                 url_elem.text = new_url
                 suitable_urls += 1
-                new_filename = f'dyn_{filename}'
+                new_filename = f'dyn_{self.filename}'
             logging.info(
                 'Подходищие urls в фиде %s - %s',
-                filename,
+                self.filename,
                 suitable_urls
             )
             logging.info(
                 'Неподходящие urls в фиде %s - %s',
-                filename,
+                self.filename,
                 skipped_urls
             )
 
-            self._save_xml(root, 'join_feeds', new_filename)
+            self._save_xml(self.root, 'join_feeds', new_filename)
             logging.info('Копия фида сохранена - %s', new_filename)
         except Exception as error:
             logging.error('Неожиданная ошибка: %s', error)
+            raise
+
+    def save(self, prefix: str = 'new'):
+        """Метод сохраняет файл, если были изменения."""
+        try:
+            if not self._is_modified:
+                logger.info(
+                    'Изменений нет — файл %s не сохранён',
+                    self.filename
+                )
+                return self
+
+            new_filename = f'{prefix}_{self.filename}'
+
+            self._save_xml(self.root, self.new_feeds_folder, new_filename)
+            logger.info('Файл сохранён как %s', new_filename)
+
+            self._is_modified = False
+            return self
+        except Exception as error:
+            logging.error(
+                'Неожиданная ошибка при сохранении файла %s: %s',
+                self.filename,
+                error
+            )
             raise
