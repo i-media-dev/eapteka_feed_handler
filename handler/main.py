@@ -24,13 +24,17 @@ def main():
 
     if not filenames:
         logging.error('Директория %s пуста', FEEDS_FOLDER)
-        raise
+        raise FileNotFoundError(
+            f'Директория {IMAGE_FOLDER} не содержит файлов'
+        )
 
     images = get_filenames_list(IMAGE_FOLDER)
 
     if not images:
         logging.error('Директория %s пуста', IMAGE_FOLDER)
-        raise
+        raise FileNotFoundError(
+            f'Директория {IMAGE_FOLDER} не содержит файлов'
+        )
 
     image_client = FeedImage(filenames, images)
     image_client.get_images()
