@@ -21,6 +21,9 @@ def main():
     db_client = ReportDataBase()
     saver.save_xml()
     filenames = get_filenames_list(FEEDS_FOLDER)
+    report_client = FeedReport(filenames)
+    data = report_client.get_offers_report()
+    save_to_database(db_client, data)
 
     if not filenames:
         logging.error('Директория %s пуста', FEEDS_FOLDER)
@@ -45,11 +48,9 @@ def main():
         handler_client.replace_images().save()
 
     new_filenames = get_filenames_list(NEW_FEEDS_FOLDER)
-    report_client = FeedReport(new_filenames)
-    data = report_client.get_offers_report()
-    save_to_database(db_client, data)
-    report_client.full_outer_join_feeds()
-    report_client.inner_join_feeds()
+    new_report_client = FeedReport(new_filenames)
+    new_report_client.full_outer_join_feeds()
+    new_report_client.inner_join_feeds()
     filter_handler_client = FeedHandler('msc.xml')
     filter_handler_client.url_filter()
 
