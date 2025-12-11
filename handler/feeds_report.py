@@ -1,3 +1,4 @@
+import copy
 import json
 import logging
 import os
@@ -30,6 +31,7 @@ class FeedReport(FileMixin):
         self.feeds_folder = feeds_folder
         self.new_feeds_folder = new_feeds_folder
         self.join_feeds_folder = join_feeds_folder
+        self._cached_offers = None
 
     def __repr__(self):
         return (
@@ -164,38 +166,34 @@ class FeedReport(FileMixin):
                 offer_id = offer.get('id')
                 if offer_id:
                     offer_counts[offer_id] += 1
-                    all_offers[offer_id] = offer
+                    all_offers[offer_id] = copy.deepcopy(offer)
         return offer_counts, all_offers
 
     @time_of_function
     @try_except
-    def inner_join_feeds(self) -> bool:
+    def join_feeds(self, join_type: str = 'inner') -> bool:
         """
-        Метод, объединяющий все офферы в один фид
-        по принципу inner join.
-        """
-        offer_counts, all_offers = self._collect_all_offers()
-        root, offers = self._super_feed()
-        for offer_id, count in offer_counts.items():
-            if count == len(self.filenames):
-                offers.append(all_offers[offer_id])
-        self._save_xml(root, self.join_feeds_folder, 'inner_join_feed.xml')
-        return True
+        Универсальный метод для объединения фидов.
 
-    @time_of_function
-    @try_except
-    def full_outer_join_feeds(self) -> bool:
+        Args:
+            join_type: 'inner' или 'full_outer'
         """
-        Метод, объединяющий все офферы в один фид
-        по принципу full outer join.
-        """
-        _, all_offers = self._collect_all_offers()
+        if not self._cached_offers:
+            self._cached_offers = self._collect_all_offers()
+
+        offer_counts, all_offers = self._cached_offers
         root, offers = self._super_feed()
-        for offer in all_offers.values():
-            offers.append(offer)
-        self._save_xml(
-            root,
-            self.join_feeds_folder,
-            'full_outer_join_feed.xml'
-        )
+        if join_type == 'inner':
+            for offer_id, count in offer_counts.items():
+                if count == len(self.filenames):
+                    offers.append(all_offers[offer_id])
+            filename = 'inner_join_feed.xml'
+        elif join_type == 'full_outer':
+            for offer in all_offers.values():
+                offers.append(offer)
+            filename = 'full_outer_join_feed.xml'
+        else:
+            raise ValueError(f'Неизвестный тип join: {join_type}')
+
+        self._save_xml(root, self.join_feeds_folder, filename)
         return True

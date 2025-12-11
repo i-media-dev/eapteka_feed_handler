@@ -28,7 +28,7 @@ def main():
     if not filenames:
         logging.error('Директория %s пуста', FEEDS_FOLDER)
         raise FileNotFoundError(
-            f'Директория {IMAGE_FOLDER} не содержит файлов'
+            f'Директория {FEEDS_FOLDER} не содержит файлов'
         )
 
     images = get_filenames_list(IMAGE_FOLDER)
@@ -49,8 +49,8 @@ def main():
 
     new_filenames = get_filenames_list(NEW_FEEDS_FOLDER)
     report_client.filenames = new_filenames
-    report_client.full_outer_join_feeds()
-    report_client.inner_join_feeds()
+    report_client.join_feeds('full_outer')
+    report_client.join_feeds('inner')
     filter_handler_client = FeedHandler('msc.xml')
     filter_handler_client.url_filter()
 
