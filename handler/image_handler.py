@@ -46,13 +46,6 @@ class FeedImage(FileMixin):
         self._existing_image_offers: set = set()
         self._existing_framed_offers: set = set()
 
-    @property
-    def root(self):
-        """Ленивая загрузка корневого элемента."""
-        if self._root is None:
-            self._root = self._get_root(self.filename, self.feeds_folder)
-        return self._root
-
     def _get_image_data(self, url: str) -> tuple:
         """
         Защищенный метод, загружает данные изображения
