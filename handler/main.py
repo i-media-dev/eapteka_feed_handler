@@ -48,9 +48,9 @@ def main():
         handler_client.replace_images().save()
 
     new_filenames = get_filenames_list(NEW_FEEDS_FOLDER)
-    new_report_client = FeedReport(new_filenames)
-    new_report_client.full_outer_join_feeds()
-    new_report_client.inner_join_feeds()
+    report_client.filenames = new_filenames
+    report_client.full_outer_join_feeds()
+    report_client.inner_join_feeds()
     filter_handler_client = FeedHandler('msc.xml')
     filter_handler_client.url_filter()
 
