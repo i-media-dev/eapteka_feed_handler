@@ -2,8 +2,8 @@ import logging
 import xml.etree.ElementTree as ET
 
 from handler.allowed_urls import ALLOWED_URLS
-from handler.constants import (ADDRESS_FTP_IMAGES, FEEDS_FOLDER, NEW_FEEDS_FOLDER,
-                               NEW_IMAGE_FOLDER)
+from handler.constants import (ADDRESS_FTP_IMAGES, FEEDS_FOLDER,
+                               NEW_FEEDS_FOLDER, NEW_IMAGE_FOLDER)
 from handler.decorators import time_of_function, try_except
 from handler.feeds import FEEDS
 from handler.logging_config import setup_logging
