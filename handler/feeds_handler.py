@@ -2,8 +2,8 @@ import logging
 import xml.etree.ElementTree as ET
 
 from handler.allowed_urls import ALLOWED_URLS
-from handler.constants import (ADDRESS, DOMEN_FTP, FEEDS_FOLDER,
-                               NEW_FEEDS_FOLDER, NEW_IMAGE_FOLDER, PROTOCOL)
+from handler.constants import (ADDRESS_FTP_IMAGES, FEEDS_FOLDER, NEW_FEEDS_FOLDER,
+                               NEW_IMAGE_FOLDER)
 from handler.decorators import time_of_function, try_except
 from handler.feeds import FEEDS
 from handler.logging_config import setup_logging
@@ -134,8 +134,7 @@ class FeedHandler(FileMixin):
 
                     picture_tag = ET.SubElement(offer, 'picture')
                     picture_tag.text = (
-                        f'{PROTOCOL}://{DOMEN_FTP}/'
-                        f'{ADDRESS}/{image_dict[offer_id]}'
+                        f'{ADDRESS_FTP_IMAGES}/{image_dict[offer_id]}'
                     )
                     input_images += 1
                     self._is_modified = True
@@ -154,8 +153,9 @@ class FeedHandler(FileMixin):
         self,
         param: str = 'referrer=reattribution%3D1'
     ):
-        suitable_urls = 0
-        skipped_urls = 0
+        suitable_offers = 0
+        deleted_offers = 0
+        to_remove = []
         try:
             offers = self.root.findall('.//offer')
             for offer in offers:
@@ -170,22 +170,29 @@ class FeedHandler(FileMixin):
                 url_without_parameters = url.split('?')[0]
 
                 if url_without_parameters not in ALLOWED_URLS:
-                    skipped_urls += 1
+                    to_remove.append(offer)
+                    deleted_offers += 1
                     continue
 
-                new_url = url_without_parameters + param
+                new_url = url_without_parameters + '?' + param
                 url_elem.text = new_url
-                suitable_urls += 1
+                suitable_offers += 1
+
+            for offer in to_remove:
+                parent = offer.getparent()
+                if parent is not None:
+                    parent.remove(offer)
+
                 new_filename = f'dyn_{self.filename}'
             logging.info(
                 'Подходищие urls в фиде %s - %s',
                 self.filename,
-                suitable_urls
+                suitable_offers
             )
             logging.info(
-                'Неподходящие urls в фиде %s - %s',
+                'Удалено неподходящих urls в фиде %s - %s',
                 self.filename,
-                skipped_urls
+                deleted_offers
             )
 
             self._save_xml(self.root, 'join_feeds', new_filename)

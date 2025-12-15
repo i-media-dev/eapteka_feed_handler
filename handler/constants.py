@@ -28,14 +28,8 @@ DELAY_FOR_RETRY = (5, 15, 30)
 MAX_WORKERS = 5
 """Количество одновременно запущенных потоков."""
 
-PROTOCOL = 'https'
-"""Протокол запроса."""
-
-ADDRESS = 'projects/eapteka/new_images'
-"""Путь к файлу."""
-
-DOMEN_FTP = 'feeds.i-media.ru'
-"""Домен FTP-сервера."""
+ADDRESS_FTP_IMAGES = 'https://feeds.i-media.ru/projects/eapteka/new_image'
+"""Адрес директории на ftp для изображений."""
 
 DEFAULT_IMAGE_SIZE = (1000, 1000)
 """
