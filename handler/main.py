@@ -17,40 +17,40 @@ setup_logging()
 @time_of_script
 @time_of_function
 def main():
-    # saver = FeedSaver()
-    # db_client = ReportDataBase()
-    # saver.save_xml()
-    # filenames = get_filenames_list(FEEDS_FOLDER)
-    # report_client = FeedReport(filenames)
-    # data = report_client.get_offers_report()
-    # save_to_database(db_client, data)
+    saver = FeedSaver()
+    db_client = ReportDataBase()
+    saver.save_xml()
+    filenames = get_filenames_list(FEEDS_FOLDER)
+    report_client = FeedReport(filenames)
+    data = report_client.get_offers_report()
+    save_to_database(db_client, data)
 
-    # if not filenames:
-    #     logging.error('Директория %s пуста', FEEDS_FOLDER)
-    #     raise FileNotFoundError(
-    #         f'Директория {FEEDS_FOLDER} не содержит файлов'
-    #     )
-    # image_client = FeedImage(filenames, images=[])
-    # image_client.get_images()
-    # images = get_filenames_list(IMAGE_FOLDER)
+    if not filenames:
+        logging.error('Директория %s пуста', FEEDS_FOLDER)
+        raise FileNotFoundError(
+            f'Директория {FEEDS_FOLDER} не содержит файлов'
+        )
+    image_client = FeedImage(filenames, images=[])
+    image_client.get_images()
+    images = get_filenames_list(IMAGE_FOLDER)
 
-    # if not images:
-    #     logging.error('Директория %s пуста', IMAGE_FOLDER)
-    #     raise FileNotFoundError(
-    #         f'Директория {IMAGE_FOLDER} не содержит файлов'
-    #     )
+    if not images:
+        logging.error('Директория %s пуста', IMAGE_FOLDER)
+        raise FileNotFoundError(
+            f'Директория {IMAGE_FOLDER} не содержит файлов'
+        )
 
-    # image_client.images = images
-    # image_client.add_frame()
+    image_client.images = images
+    image_client.add_frame()
 
-    # for filename in filenames:
-    #     handler_client = FeedHandler(filename)
-    #     handler_client.replace_images().save()
+    for filename in filenames:
+        handler_client = FeedHandler(filename)
+        handler_client.replace_images().save()
 
-    # new_filenames = get_filenames_list(NEW_FEEDS_FOLDER)
-    # report_client.filenames = new_filenames
-    # report_client.join_feeds('full_outer')
-    # report_client.join_feeds('inner')
+    new_filenames = get_filenames_list(NEW_FEEDS_FOLDER)
+    report_client.filenames = new_filenames
+    report_client.join_feeds('full_outer')
+    report_client.join_feeds('inner')
     filter_handler_client = FeedHandler('msc.xml')
     filter_handler_client.url_filter()
 
