@@ -157,7 +157,11 @@ class FeedHandler(FileMixin):
         deleted_offers = 0
         to_remove = []
         try:
-            offers = self.root.findall('.//offer')
+            offers_parent = self.root.find('.//offers')
+            if offers_parent is None:
+                logging.error('Не найден родительский элемент offers')
+                return
+            offers = offers_parent.findall('offer')
             for offer in offers:
                 url_elem = offer.find('url')
                 if url_elem is None:
@@ -179,13 +183,11 @@ class FeedHandler(FileMixin):
                 suitable_offers += 1
 
             for offer in to_remove:
-                parent = offer.getparent()
-                if parent is not None:
-                    parent.remove(offer)
+                offers_parent.remove(offer)
 
-                new_filename = f'dyn_{self.filename}'
+            new_filename = f'dyn_{self.filename}'
             logging.info(
-                'Подходищие urls в фиде %s - %s',
+                'Подходящие urls в фиде %s - %s',
                 self.filename,
                 suitable_offers
             )
