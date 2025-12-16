@@ -165,6 +165,10 @@ class FeedHandler(FileMixin):
                     deleted_offers += 1
             for offer in to_remove:
                 offers_parent.remove(offer)
+            logging.info(
+                'Удалено %s офферов с categoryId == 0',
+                deleted_offers
+            )
             return self
         except Exception as error:
             logging.error('Неизвестная ошибка в delete_offers: %s', error)
