@@ -45,13 +45,16 @@ def main():
 
     for filename in filenames:
         handler_client = FeedHandler(filename)
-        handler_client.replace_images().save()
+        handler_client.replace_images().delete_offers().save()
 
     new_filenames = get_filenames_list(NEW_FEEDS_FOLDER)
     report_client.filenames = new_filenames
     report_client.join_feeds('full_outer')
     report_client.join_feeds('inner')
-    filter_handler_client = FeedHandler('msc.xml')
+    filter_handler_client = FeedHandler(
+        'new_msc.xml',
+        feeds_folder=NEW_FEEDS_FOLDER
+    )
     filter_handler_client.url_filter()
 
 

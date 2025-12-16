@@ -149,6 +149,27 @@ class FeedHandler(FileMixin):
             logging.error('Ошибка в image_replacement: %s', error)
             raise
 
+    def delete_offers(self):
+        deleted_offers = 0
+        to_remove = []
+        try:
+            offers_parent = self.root.find('.//offers')
+            if offers_parent is None:
+                logging.error('Не найден родительский элемент offers')
+                return self
+            offers = offers_parent.findall('offer')
+            for offer in offers:
+                category_id = int(offer.findtext('categoryId'))
+                if category_id == 0:
+                    to_remove.append(offer)
+                    deleted_offers += 1
+            for offer in to_remove:
+                offers_parent.remove(offer)
+            return self
+        except Exception as error:
+            logging.error('Неизвестная ошибка в delete_offers: %s', error)
+            raise
+
     def url_filter(
         self,
         param: str = 'referrer=reattribution%3D1'
